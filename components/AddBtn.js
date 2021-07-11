@@ -25,7 +25,7 @@ const AddBtn = ({ navigation }) => {
                     width={30}
                 />
 
-                {/* popup */}
+                {/* popup to display options */}
                 <Modal
                     visible={showPopup}
                     transparent={true}
@@ -34,10 +34,11 @@ const AddBtn = ({ navigation }) => {
                 >
                     <Block center middle>
                         <Block flex={false} color={theme.colors.glassWhite} padding={[40, 15]} style={styles.popupCont} >
+                            {/* Add note */}
                             <TouchableOpacity
                                 onPress={()=> {
                                     setShowPopup(false);
-                                    navigation.navigate("NoteDetail", {index: "new", navText: "New Note"});
+                                    navigation.navigate("AddNote", {index: "new", navText: "New Note"});
 
                                 }}
                             >
@@ -51,10 +52,11 @@ const AddBtn = ({ navigation }) => {
                                     <Text h4 bold gray >New Note</Text>
                                 </Card>
                             </TouchableOpacity>
+                            {/* Add Reminder */}
                             <TouchableOpacity
                                 onPress={()=> {
                                     setShowPopup(false);
-                                    navigation.navigate("ReminderDetail", {index: "new", navText: "New Reminder"});
+                                    navigation.navigate("AddReminder", {index: "new", navText: "New Reminder"});
 
                                 }}
                             >

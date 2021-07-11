@@ -10,19 +10,25 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.15.5",
     "@react-native-community/datetimepicker": "^3.5.2",
     "@react-native-community/masked-view": "^0.1.11",
+    "@react-native-google-signin/google-signin": "^6.0.1",
     "@react-navigation/bottom-tabs": "^5.11.11",
     "@react-navigation/stack": "^5.14.5",
+    "@robinbobin/react-native-google-drive-api-wrapper": "^0.6.0",
     "react": "17.0.1",
     "react-native": "0.64.2",
     "react-native-feather": "^1.0.2",
     "react-native-gesture-handler": "^1.10.3",
+    "react-native-get-random-values": "^1.7.0",
     "react-native-linear-gradient": "^2.5.6",
+    "react-native-onboarding-swiper": "^1.1.4",
     "react-native-reanimated": "^2.2.0",
     "react-native-safe-area-context": "^3.2.0",
     "react-native-screens": "^3.4.0",
     "react-native-svg": "^12.1.1",
+    "react-native-svg-transformer": "^0.14.3",
     "realm": "^10.5.0"
   },
   "devDependencies": {

@@ -1,8 +1,6 @@
 import React from 'react';
 import { StyleSheet, StatusBar } from 'react-native';
 import { theme } from '../constants';
-import Block from '../components/Block';
-import Text from '../components/Text';
 import BarIcon from '../components/BarIcon';
 import AddBtn from '../components/AddBtn';
 // navigation
@@ -19,14 +17,25 @@ import AddNote from '../screens/AddNote';
 import AddReminder from '../screens/AddReminder';
 import ReminderDetail from '../screens/ReminderDetail';
 import NoteDetail from '../screens/NoteDetail';
+import Login from '../screens/Login';
+import Splash from '../screens/Splash';
+import Onboarding from '../screens/Onboarding';
 
 
-
+const AuthStack = createStackNavigator();
 const AuthRoute = () => {
     return (
-        <Block center middle >
-            <Text>Hello Auth</Text>
-        </Block>
+        <AuthStack.Navigator>
+            <AuthStack.Screen name="Splash" component={Splash} options={{
+                headerShown: false
+            }} />
+            <AuthStack.Screen name="Onboarding" component={Onboarding} options={{
+                headerShown: false
+            }} />
+            <AuthStack.Screen name="Login" component={Login} options={{
+                headerShown: false
+            }} />
+        </AuthStack.Navigator>
     );
 }
 
@@ -95,7 +104,7 @@ const NavigationCont = () => {
             <StatusBar 
                 backgroundColor={theme.colors.primaryGreen}
             />
-            <AppStack.Navigator initialRouteName="MainRoute" >
+            <AppStack.Navigator initialRouteName="AuthRoute" >
                 <AppStack.Screen name="AuthRoute" component={AuthRoute} options={{
                     headerShown: false
                 }} />

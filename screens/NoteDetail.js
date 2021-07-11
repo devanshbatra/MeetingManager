@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Dimensions, Switch } from 'react-native';
-import { Pocket, AlignLeft } from 'react-native-feather';
+import { ScrollView, StyleSheet, Dimensions, Switch, TouchableOpacity, ToastAndroid } from 'react-native';
+import { Pocket, AlignLeft, Plus } from 'react-native-feather';
 import Block from '../components/Block';
 import Header2 from '../components/Header2';
 import Input from '../components/Input';
 import Text from '../components/Text';
 import Card from '../components/Card';
 import { theme, mocks } from '../constants';
+import Realm from 'realm';
+let realm;
 
 
 const winWidth = Dimensions.get('window').width;
@@ -22,16 +24,43 @@ const NoteDetail = ({ navigation, route }) => {
     });
     const [title, setTitle] = useState("");
     const [desc, setDesc] = useState("");
+    const [date, setDate] = useState(new Date());
     const [pinned, setPinned] = useState(false);
 
     useEffect(() => {
-        if(route.params.index!=="new"){
-            setData(mocks.notes[route.params.index]);
+        realm = new Realm({path: "NoteDatabase.realm"});
+        const noteData = realm.objectForPrimaryKey("Notes", route.params.index);
+        console.log(noteData);
+        setTitle(noteData.title);
+        setDesc(noteData.desc);
+        setDate(noteData.date);
+        setPinned(noteData.pinned);
+    }, []);
+
+
+    const saveChanges = ()=>{
+        if(title!==""){
+            realm.write(()=> {
+                const notesData = realm.objectForPrimaryKey("Notes", route.params.index);
+                notesData.title = title;
+                notesData.date = date;
+                notesData.desc = desc;
+                notesData.pinned = pinned;
+            });
+            ToastAndroid.showWithGravityAndOffset(
+                "Changes Saved",
+                ToastAndroid.LONG,
+                ToastAndroid.BOTTOM,
+                25,
+                50
+              );
+            navigation.goBack();
+        }else{
+            Alert.alert("Title is missing", "Please add a title");
+            console.log(title, "Missing title");
         }
-        setTitle(data.title);
-        setDesc(data.desc);
-        console.log(data);
-    }, [data]);
+    }
+
 
     return (
         <Block color={theme.colors.blue} >
@@ -43,10 +72,10 @@ const NoteDetail = ({ navigation, route }) => {
                 <Block flex={false} color={theme.colors.primaryGreen} row padding={[20]} style={styles.topBar}  >
                     {/* Top date Display */}
                     <Card padding={[5, 0, 0, 0]} shadow center flex={false} color={theme.colors.white}  >
-                        <Text gray bold >{data.date.toDateString().slice(4, 7)}</Text>
-                        <Text gray bold >{data.date.toDateString().slice(8, 10)}</Text>
+                        <Text gray bold >{date.toDateString().slice(4, 7)}</Text>
+                        <Text gray bold >{date.toDateString().slice(8, 10)}</Text>
                         <Block color={theme.colors.tomato} padding={[5, 5, 8, 5]} flex={false} >
-                            <Text white caption >{data.date.toDateString().slice(11)}</Text>
+                            <Text white caption >{date.toDateString().slice(11)}</Text>
                         </Block>
                     </Card>
                     {/* title */}
@@ -64,6 +93,15 @@ const NoteDetail = ({ navigation, route }) => {
                             style={{ marginRight: 20 }}
                         />
                     </Block>
+                    
+                    {/* save changes */}
+                    <TouchableOpacity style={styles.saveBlock} onPress={saveChanges} >
+                        <Card flex={false} center row color={theme.colors.tomato} padding={[2, 10]} >
+                            <Plus stroke={theme.colors.gray3} height={20} width={20} strokeWidth={3} />
+                            <Text gray3 h4 bold >Save</Text>
+                        </Card>
+                    </TouchableOpacity>
+
                 </Block>
 
                 <ScrollView
@@ -117,6 +155,11 @@ const styles = StyleSheet.create({
         height: winHeight * 0.83,
         borderBottomEndRadius: 25,
         borderBottomStartRadius: 25,
+    },
+    saveBlock: {
+        position: "absolute",
+        top: 10,
+        right: 20
     }
 });
 

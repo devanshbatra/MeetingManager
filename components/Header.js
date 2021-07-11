@@ -6,13 +6,34 @@ import Card from "./Card";
 import Input from "./Input";
 import { theme, mocks } from '../constants';
 
-const Header = ({ screenName, navigation, setReminders, setNotes }) => {
+const Header = ({ screenName, navigation, setReminders, setNotes, reminderMenu, setReminderMenu, noteMenu, setNoteMenu }) => {
     const [greeting, setGreeting] = useState("Good Morning");
     const [instruction, setInstruction] = useState("You have some important");
-    const [noteMenu, setNoteMenu] = useState("all");
-    const [reminderMenu, setReminderMenu] = useState("today");
     const [now, setnow] = useState(new Date());
+    const [remindersdata, setRemindersdata] = useState([]);
+    const [notesData, setNotesData] = useState([]);
+    const [userData, setUserData] = useState([{name: "User"}]);
     useEffect(() => {
+        try{
+            let realm1 = new Realm({ path: 'Database.realm' });
+            const remindersDataFromRealm = realm1.objects("Reminders");
+            setRemindersdata(remindersDataFromRealm);
+    
+            let realm2 = new Realm({ path: 'NoteDatabase.realm' });
+            const notesDataFromRealm = realm2.objects("Notes");
+            setNotesData(notesDataFromRealm);
+    
+            let realm3 = new Realm({ path: 'UserDatabase.realm' });
+            const userDataFromRealm = realm3.objects("UserDetails");
+            setUserData(userDataFromRealm);
+            console.log(userDataFromRealm[0].name.split(" ")[0]);
+        }catch{
+            setRemindersdata([]);
+            setNotesData([]);
+            setUserData([{name: "User"}]);
+            console.log("Falied to fetch data")
+        }
+
         const today = new Date();
         const hour = today.getHours();
         console.log(hour);
@@ -24,7 +45,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
             setGreeting("Good evening");
         }
 
-        if (mocks.reminders.filter((reminder) => (reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < 24).length === 0) {
+        if (remindersdata.filter((reminder) => ((reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < 24 && (reminder.date.getTime() - now.getTime()) > 0) ).length === 0) {
             setInstruction("Relax, You don't have any");
         }
     }, []);
@@ -37,7 +58,11 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
             </Block>
             {/* for greeting */}
             <Block padding={[30, 0, 5, 50]} flex={false} >
-                <Text bold white h1 >Hello {mocks.userProf.name.split(" ")[0]} </Text>
+                {userData.length>0?(
+                    <Text bold white h1 >Hello {userData[0].name.split(" ")[0]} </Text>
+                    ):(
+                    <Text bold white h1 >Hello User </Text>
+                )}
                 <Text bold white h1 >{greeting},</Text>
             </Block>
 
@@ -81,7 +106,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
                             padding={[10, 25]} margin={[0, 10]}
                             clickable onClick={() => {
                                 setReminderMenu("today");
-                                setReminders(() => mocks.reminders.filter((reminder) => (reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < 24))
+                                setReminders(() => remindersdata.filter((reminder) => ((reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < 24 && (reminder.date.getTime() - now.getTime()) > 0) ))
                             }}
                         >
                             <Text
@@ -95,7 +120,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
                             padding={[10, 25]} margin={[0, 10]}
                             clickable onClick={() => {
                                 setReminderMenu("week");
-                                setReminders(() => mocks.reminders.filter((reminder) => (reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < (24 * 7)))
+                                setReminders(() => remindersdata.filter((reminder) => (reminder.date.getTime() - now.getTime()) / (1000 * 60 * 60) < (24 * 7)  && (reminder.date.getTime() - now.getTime()) > 0 ))
                             }}
                         >
                             <Text
@@ -122,7 +147,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
                             padding={[10, 25]} margin={[0, 10]}
                             clickable onClick={() => {
                                 setReminderMenu("all");
-                                setReminders(mocks.reminders)
+                                setReminders(remindersdata);
                             }}
                         >
                             <Text
@@ -141,7 +166,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
                     <Card flex={false} color={(noteMenu === "all") ? theme.colors.white : theme.colors.primaryGreen}
                         padding={[10, 25]} margin={[0, 15]}
                         clickable onClick={() => {
-                            setNotes(mocks.notes);
+                            setNotes(notesData);
                             setNoteMenu("all");
                         }}
                     >
@@ -155,7 +180,7 @@ const Header = ({ screenName, navigation, setReminders, setNotes }) => {
                     <Card flex={false} color={(noteMenu === "pinned") ? theme.colors.white : theme.colors.primaryGreen}
                         padding={[10, 25]} margin={[0, 15]}
                         clickable onClick={() => {
-                            setNotes(() => mocks.notes.filter((note) => note.pinned === true));
+                            setNotes(() => notesData.filter((note) => note.pinned === true));
                             setNoteMenu("pinned");
                         }}
                     >

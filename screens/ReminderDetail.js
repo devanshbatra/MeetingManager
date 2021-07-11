@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, StyleSheet, Dimensions, TouchableOpacity, Alert, Switch, ScrollView } from 'react-native';
+import { ToastAndroid, StyleSheet, Dimensions, TouchableOpacity, Alert, Switch, ScrollView } from 'react-native';
 import { Clock, Calendar, AlignLeft, Plus, Bell, Check, Trash } from 'react-native-feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Block from '../components/Block';
@@ -7,31 +7,14 @@ import Header2 from '../components/Header2';
 import Text from '../components/Text';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import { theme, mocks } from '../constants';
+import { theme } from '../constants';
 import Realm from 'realm';
 
-
+let realm;
 const winWidth = Dimensions.get('window').width;
 const winHeight = Dimensions.get("window").height;
 
 
-const realm = new Realm({
-    path: 'Database.realm',
-    schema: [
-        {
-            name: "Reminders",
-            properties: {
-                _id: {type: "objectId", default: Realm.BSON.ObjectID()},
-                title: "string",
-                date: { type: "date", default: new Date() },
-                time: { type: "date", default: new Date() },
-                desc: "string",
-                notify: { type: "bool", default: 0 },
-                agenda: {type: "list", objectType: "string"}
-            }
-        }
-    ]
-});
 
 
 const ReminderDetail = ({ navigation, route }) => {
@@ -53,51 +36,54 @@ const ReminderDetail = ({ navigation, route }) => {
     const [agenda, setAgenda] = useState([]);
     const [newAgenda, setNewAgenda] = useState("");
 
-    useEffect(() => {
-        if(route.params.index!="new"){
-            setData(mocks.reminders[route.params.index]);
-            console.log("set data called.")
-        }
-        setTitle(data.title);
-        setDesc(data.desc);
-        setNotify(data.notify);
-        setAgenda(data.agenda);
-    }, [data]);
-
     useEffect(()=>{
-        navigation.addListener("beforeRemove", (e)=>{
-            e.preventDefault();
+        realm = new Realm({ path: 'Database.realm' });
+        console.log("Id : ", route.params.index);
+        const remindersData = realm.objectForPrimaryKey("Reminders", route.params.index);
+        console.log(remindersData);
+        setTitle(remindersData.title);
+        setTime(remindersData.time);
+        setDate(remindersData.date);
+        setDesc(remindersData.desc);
+        setNotify(remindersData.notify);
+        setAgenda(remindersData.agenda);
+    } , []);
 
-            Alert.alert(
-                "Save Changes",
-                "Do you want to save the changes",
-                [
-                    {text: "Discard", style: "destructive", onPress: ()=> navigation.dispatch(e.data.action)  },
-                    {text: "Save", onPress: ()=> {
-                        if(title===""){
-                            Alert.alert("Title is missing", "Please add a title");
-                            console.log(title, "isko missing bta rha h");
-                        }else{
-                            realm.write(()=> {
-                                realm.create("Reminders", {
-                                    title: title,
-                                    date: date,
-                                    time: time,
-                                    desc: desc,
-                                    notify: notify,
-                                    agenda: agenda
-                                })
-                            } );
-                            navigation.dispatch(e.data.action);
-                        }
-                    }  },
-                ],
-                {
-                    cancelable: true
-                }
-            );
-        })
-    } ,[navigation, title])
+
+    // useEffect(()=>{
+    //     navigation.addListener("beforeRemove", (e)=>{
+    //         e.preventDefault();
+
+    //         Alert.alert(
+    //             "Save Changes",
+    //             "Do you want to save the changes",
+    //             [
+    //                 {text: "Discard", style: "destructive", onPress: ()=> navigation.dispatch(e.data.action)  },
+    //                 {text: "Save", onPress: ()=> {
+    //                     if(title===""){
+    //                         Alert.alert("Title is missing", "Please add a title");
+    //                         console.log(title, "Missing title");
+    //                     }else{
+    //                         realm.write(()=> {
+    //                             realm.create("Reminders", {
+    //                                 title: title,
+    //                                 date: date,
+    //                                 time: time,
+    //                                 desc: desc,
+    //                                 notify: notify,
+    //                                 agenda: agenda
+    //                             })
+    //                         } );
+    //                         navigation.dispatch(e.data.action);
+    //                     }
+    //                 }  },
+    //             ],
+    //             {
+    //                 cancelable: true
+    //             }
+    //         );
+    //     })
+    // } ,[navigation])
 
 
     const DateHandler = (event, value) => {
@@ -110,18 +96,25 @@ const ReminderDetail = ({ navigation, route }) => {
     const TimeHandler = (event, value) => {
         const now = new Date()
         setShowTimePicker(false);
-        console.log("For time", event, value.getTime() - now.getTime());
         if (event.type === "set") {
             if (date.toDateString() === value.toDateString()) {
                 if (value.getTime() > now.getTime()) {
-                    setTime(value)
-                    console.log("Date is same, time value set.")
+                    const exactTime = new Date(event.nativeEvent.timestamp);
+                    const exactString = date.toISOString().slice(0, 10) + exactTime.toISOString().slice(10) ;
+                    const exactDateTime = new Date(exactString);
+                    setTime(exactDateTime);
+                    setDate(exactDateTime);
+                    console.log("Date is same, time value set.", exactDateTime)
                 } else {
                     Alert.alert("Time is invalid", "Please Select a future time");
                 }
             } else {
-                setTime(value);
-                console.log("Date is different, time value set.")
+                const exactTime = new Date(event.nativeEvent.timestamp);
+                const exactString = date.toISOString().slice(0, 10) + exactTime.toISOString().slice(10) ;
+                const exactDateTime = new Date(exactString);
+                setTime(exactDateTime);
+                setDate(exactDateTime);
+                console.log("Date is different, time value set.", exactDateTime)
             }
         }
     }
@@ -133,6 +126,31 @@ const ReminderDetail = ({ navigation, route }) => {
         if(newAgenda!==""){
             setAgenda((prevAgenda)=> [...prevAgenda, newAgenda] );
             setNewAgenda("");
+        }
+    }
+
+    const saveChanges = ()=>{
+        if(title!==""){
+            realm.write(()=> {
+                const remindersData = realm.objectForPrimaryKey("Reminders", route.params.index);
+                remindersData.title = title;
+                remindersData.time = time;
+                remindersData.date = date;
+                remindersData.desc = desc;
+                remindersData.notify = notify;
+                remindersData.agenda = agenda;
+            });
+            ToastAndroid.showWithGravityAndOffset(
+                "Changes Saved",
+                ToastAndroid.LONG,
+                ToastAndroid.BOTTOM,
+                25,
+                50
+              );
+            navigation.goBack();
+        }else{
+            Alert.alert("Title is missing", "Please add a title");
+            console.log(title, "Missing title");
         }
     }
 
@@ -149,7 +167,7 @@ const ReminderDetail = ({ navigation, route }) => {
                         <Text gray bold >{date.toDateString().slice(4, 7)}</Text>
                         <Text gray bold >{date.toDateString().slice(8, 10)}</Text>
                         <Block color={theme.colors.tomato} padding={[5, 5, 8, 5]} flex={false} >
-                            <Text white caption >{data.date.toDateString().slice(11)}</Text>
+                            <Text white caption >{date.toDateString().slice(11)}</Text>
                         </Block>
                     </Card>
                     {/* title */}
@@ -170,6 +188,14 @@ const ReminderDetail = ({ navigation, route }) => {
                             style={{ marginRight: 20 }}
                         />
                     </Block>
+                    {/* save changes */}
+                    <TouchableOpacity style={styles.saveBlock} onPress={saveChanges} >
+                        <Card flex={false} center row color={theme.colors.tomato} padding={[2, 10]} >
+                            <Plus stroke={theme.colors.gray3} height={20} width={20} strokeWidth={3} />
+                            <Text gray3 h4 bold >Save</Text>
+                        </Card>
+                    </TouchableOpacity>
+
                 </Block>
 
                 <ScrollView
@@ -314,6 +340,11 @@ const styles = StyleSheet.create({
         height: winHeight * 0.83,
         borderBottomEndRadius: 25,
         borderBottomStartRadius: 25,
+    },
+    saveBlock: {
+        position: "absolute",
+        top: 10,
+        right: 20
     }
 });
 

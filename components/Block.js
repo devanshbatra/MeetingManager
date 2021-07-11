@@ -153,10 +153,11 @@ export default function Block({
     if (gradient) {
         return (
             <LinearGradient
-                colors={[theme.colors.primaryGreen, theme.colors.lightGreen]}
-                useAngle={true}
-                angle={125}
-                angleCenter={{ x: 0.5, y: 0.5 }}
+                colors={[theme.colors.primaryGreen, theme.colors.primaryGreen,  "#32e099"]}
+                // useAngle={true}
+                // angle={125}
+                // angleCenter={{ x: 0.5, y: 0.5 }}
+                locations= {[0, 0.5, 0.9]}
                 style={blockStyles}>
                 {children}
             </LinearGradient>
