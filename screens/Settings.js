@@ -71,7 +71,7 @@ const Settings = () => {
                         onPress={() => console.log('pressed')}
                     >
                         <Card flex={false} margin={[10, 20]} padding={[20, 15]} shadow >
-                            <Text primary bold >More Apps from Genius Labs</Text>
+                            <Text primary bold >More Apps from Devansh Batra</Text>
                         </Card>
                     </TouchableOpacity>
                     <TouchableOpacity
